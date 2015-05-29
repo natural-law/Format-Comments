@@ -3,15 +3,109 @@ import re
 import os
 import sys
 import shutil
+import string
 
 from argparse import ArgumentParser
 
-def change_comment(param):
-    # print('++++++++++++++++++++++')
-    # print(param)
-    # print('++++++++++++++++++++++\n')
+stripRE = re.compile("(?P<begin>(^\s*\/\*\*\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>.*)(?P<end>\s*\*\/\s*)?")
+elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s+(?P<content>[^@]*))")
+indentRE = re.compile("(?P<indent>^\s*)")
 
-    return param
+tagFilter = ["lua", "js", "name", "static", "see", "since"]
+
+# Translate
+def translate(elements):
+    for idx, element in enumerate(elements):
+        elements[idx] = "===="+elements[idx]
+    return elements
+
+def reformat_comment(inputStr, target):
+    lines = inputStr.split("\n")
+    targetRE = re.compile("@~"+string.lower(target))
+    result = inputStr
+    elements = []
+    currentElement = {"language": False, "begin": 0, "end": 0, "content": []}
+    index = 0
+
+    # Check target, exist then continue
+    if re.search(targetRE, inputStr) != None:
+        return inputStr
+
+    indent = len(re.match(indentRE, lines[0]).group("indent"))
+
+    for index, line in enumerate(lines):
+        foundSub = False
+        langTag = False
+
+        stripped = re.match(stripRE, line)
+        if stripped != None:
+            content = stripped.group("content")
+
+            lineElements = re.findall(elementRE, line)
+            for element in lineElements:
+                foundSub = True
+                # Language tag and not english
+                if element[1][0] == "~":
+                    langTag = True
+                    if element[1] != "~english":
+                        continue
+
+                # Filte tag
+                if tagFilter.count(element[1]) != 0:
+                    continue
+
+                currentElement["end"] = index;
+                elements.append(currentElement)
+                currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
+                currentElement["content"].append(element[2])
+                langTag = False
+
+            if not foundSub:
+                currentElement["content"].append(content)
+
+    currentElement["end"] = index-1
+    elements.append(currentElement)
+
+    tobeTranslate = []
+    for element in elements:
+        for line in element["content"]:
+            tobeTranslate.append(line)
+
+    translated = translate(tobeTranslate)
+
+    index = 0
+    lineNb = 0
+    offset = 0
+    for element in elements:
+        content = element["content"]
+        if len(content) == 0:
+            continue
+
+        # Generate lines
+        # Append
+        begin = element["begin"]
+        if element["language"] != True:
+            lines[begin] = string.replace(lines[begin], content[0], "@~english "+content[0])
+
+        # Replace with translated language
+        for idx, line in enumerate(element["content"]):
+            if idx == 0:
+                element["content"][idx] = "{} * @~{} {}".format(" "*indent, target, translated[index])
+            else:
+                element["content"][idx] = "{} * {}".format(" "*indent, translated[index])
+            index = index+1
+
+        # Add translated language
+        end = element["end"]
+        for i in range(0, end-begin):
+            lines.insert(end+offset, element["content"][i])
+            offset = offset+1
+
+    result = ""
+    for line in lines:
+        result = "{}{}\n".format(result, line)
+
+    return result
 
 def parse_header(src_file, dst_file):
     f = open(src_file)
@@ -39,7 +133,7 @@ def parse_header(src_file, dst_file):
             if line_str.endswith('*/'):
                 seg_start = False
                 if len(seg_lines) > 0:
-                    replace_str = change_comment(''.join(seg_lines))
+                    replace_str = reformat_comment(''.join(seg_lines))
                     new_lines.append(replace_str)
                     seg_lines = []
         else:
