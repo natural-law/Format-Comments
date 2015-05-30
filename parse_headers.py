@@ -16,7 +16,7 @@ tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addt
 def translate(elements):
     for idx, element in enumerate(elements):
         if elements[idx] != "":
-            elements[idx] = "===="+elements[idx]
+            elements[idx] = ""
     return elements
 
 def reformat_comment(inputStr, target):
@@ -111,9 +111,10 @@ def reformat_comment(inputStr, target):
         # Replace with translated language
         for idx, line in enumerate(element["content"]):
             if idx == 0:
-                element["content"][idx] = "{} * @~{} {}".format(" "*indent, target, translated[index])
-            else:
-                element["content"][idx] = "{} * {}".format(" "*indent, translated[index])
+                element["content"][idx] = "{} * @~{} ".format(" "*indent, target)
+            #     element["content"][idx] = "{} * @~{} {}".format(" "*indent, target, translated[index])
+            # else:
+            #     element["content"][idx] = "{} * {}".format(" "*indent, translated[index])
             index = index+1
 
         # Add translated language
