@@ -47,7 +47,7 @@ def reformat_comment(inputStr, target):
             if re.match(tagFilterRE, content) != None:
                 currentElement["end"] = index;
                 elements.append(currentElement)
-                currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
+                currentElement = {"language": langTag, "begin": index, "end": 0, "content": [""]}
                 continue
 
             lineElements = re.findall(elementRE, line)
@@ -93,8 +93,11 @@ def reformat_comment(inputStr, target):
         # Generate lines
         # Append
         begin = element["begin"]
-        if element["language"] != True and content[0].strip() != "":
-            lines[begin] = string.replace(lines[begin], content[0], "@~english "+content[0])
+        if element["language"] != True:
+            if content[0].strip() == "":
+                lines[begin+offset] = lines[begin+offset] + "@~english"
+            else:
+                lines[begin+offset] = string.replace(lines[begin+offset], content[0], "@~english "+content[0])
 
         if oneLine:
             strip = re.match(stripRE, lines[begin])
