@@ -1,9 +1,18 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import re
 import os
 import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import shutil
 import string
+import urllib
+import urllib2
+import json
+
+KEYFROM = 'zilongshanren'
+API_KEY = '1978571890'
 
 from argparse import ArgumentParser
 
@@ -13,11 +22,35 @@ paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))"
 indentRE = re.compile("(?P<indent>^\s*)")
 tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\}))")
 
+
+def getTranslate(txt):
+    unicode(txt, 'utf-8')
+    url = 'http://fanyi.youdao.com/openapi.do'
+    data = {
+        'keyfrom': KEYFROM,
+        'key': API_KEY,
+        'type': 'data',
+        'doctype': 'json',
+        'version': 1.1,
+        'q': txt
+    }
+    data = urllib.urlencode(data)
+    url = url+'?'+data
+    req = urllib2.Request(url)
+    response = urllib2.urlopen(req)
+    result = json.loads(response.read())
+    # print(result)
+    if result.get('translation'):
+        translatedText = result['translation']
+        return translatedText[0]
+    else:
+        return txt
+
 # Translate
 def translate(elements):
     for idx, element in enumerate(elements):
         if elements[idx] != "":
-            elements[idx] = ""
+            elements[idx] = getTranslate(elements[idx])
     return elements
 
 def reformat_comment(inputStr, target):
