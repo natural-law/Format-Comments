@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 
 stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>[^(*/)]*)(?P<end>\*\/\s*$)?")
 elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s+(?P<content>[^@]*))")
+paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))")
 indentRE = re.compile("(?P<indent>^\s*)")
 tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\}))")
 
@@ -16,7 +17,7 @@ tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addt
 def translate(elements):
     for idx, element in enumerate(elements):
         if elements[idx] != "":
-            elements[idx] = "===="+elements[idx]
+            elements[idx] = ""
     return elements
 
 def reformat_comment(inputStr, target):
@@ -50,20 +51,30 @@ def reformat_comment(inputStr, target):
                 currentElement = {"language": langTag, "begin": index, "end": 0, "content": [""]}
                 continue
 
-            lineElements = re.findall(elementRE, line)
-            for element in lineElements:
+            # Parameter
+            element = re.match(paramRE, content)
+            if element != None:
                 foundSub = True
-                # Language tag and not english
-                if element[1][0] == "~":
-                    langTag = True
-                    if element[1] != "~english":
-                        continue
-
                 currentElement["end"] = index;
                 elements.append(currentElement)
                 currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
-                currentElement["content"].append(element[2])
+                currentElement["content"].append(element.group("content"))
                 langTag = False
+            else:
+                lineElements = re.findall(elementRE, line)
+                for element in lineElements:
+                    foundSub = True
+                    # Language tag and not english
+                    if element[1][0] == "~":
+                        langTag = True
+                        if element[1] != "~english":
+                            continue
+
+                    currentElement["end"] = index;
+                    elements.append(currentElement)
+                    currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
+                    currentElement["content"].append(element[2])
+                    langTag = False
 
             if not foundSub:
                 currentElement["content"].append(content)
