@@ -185,41 +185,60 @@ if __name__ == '__main__':
 
     parser = ArgumentParser(prog="parse_headers",
                             description='Parse header files.')
-    parser.add_argument("-s", "--src-path", required=True, dest="src_path",
-                        help="Specify the source path.")
-    parser.add_argument("-d", "--dst-path", dest="dst_path",
-                        help="Specify the output path.")
+    parser.add_argument("-s", "--src-file", required=True, dest="src_file",
+                        help="Specify the source file.")
+    parser.add_argument("-d", "--dst-file", dest="dst_file",
+                        help="Specify the output file.")
 
     (args, unknown) = parser.parse_known_args()
 
-    source_path = os.path.expanduser(args.src_path)
-    if not os.path.isabs(source_path):
-        source_path = os.path.abspath(source_path)
+    src_file = os.path.expanduser(args.src_file)
+    if not os.path.isabs(src_file):
+        src_file = os.path.abspath(src_file)
 
-    source_path = os.path.normpath(source_path)
-    if not os.path.isdir(source_path):
-        print('%s is not a valid folder path.' % source_path)
+    src_file = os.path.normpath(src_file)
+    if not os.path.isfile(src_file):
+        print('%s is not a valid folder path.' % src_file)
         sys.exit(1)
 
-    if args.dst_path is None:
-        dst_path = os.path.expanduser('~/OutputHeaders')
+    if args.dst_file is None:
+        dst_file = src_file
     else:
-        dst_path = os.path.expanduser(args.dst_path)
-        if not os.path.isabs(dst_path):
-            dst_path = os.path.abspath(dst_path)
+        dst_file = os.path.expanduser(args.dst_file)
+        if not os.path.isabs(dst_file):
+            dst_file = os.path.abspath(dst_file)
 
-    dst_path = os.path.normpath(dst_path)
-    if source_path != dst_path:
-        if os.path.exists(dst_path):
-            shutil.rmtree(dst_path)
-        os.makedirs(dst_path)
+    dst_file = os.path.normpath(dst_file)
+    parse_header(src_file, dst_file)
 
-    for root, dirs, files in os.walk(source_path):
-        for f in files:
-            name, ext = os.path.splitext(f)
-            if ext == '.h':
-                full_path = os.path.join(root, f)
-                rel_path = os.path.relpath(full_path, source_path)
-                dst_file_path = os.path.join(dst_path, rel_path)
-                parse_header(full_path, dst_file_path)
+    # source_path = os.path.expanduser(args.src_path)
+    # if not os.path.isabs(source_path):
+    #     source_path = os.path.abspath(source_path)
+
+    # source_path = os.path.normpath(source_path)
+    # if not os.path.isdir(source_path):
+    #     print('%s is not a valid folder path.' % source_path)
+    #     sys.exit(1)
+
+    # if args.dst_path is None:
+    #     dst_path = os.path.expanduser('~/OutputHeaders')
+    # else:
+    #     dst_path = os.path.expanduser(args.dst_path)
+    #     if not os.path.isabs(dst_path):
+    #         dst_path = os.path.abspath(dst_path)
+
+    # dst_path = os.path.normpath(dst_path)
+    # if source_path != dst_path:
+    #     if os.path.exists(dst_path):
+    #         shutil.rmtree(dst_path)
+    #     os.makedirs(dst_path)
+
+    # for root, dirs, files in os.walk(source_path):
+    #     for f in files:
+    #         name, ext = os.path.splitext(f)
+    #         if ext == '.h':
+    #             full_path = os.path.join(root, f)
+    #             rel_path = os.path.relpath(full_path, source_path)
+    #             dst_file_path = os.path.join(dst_path, rel_path)
+    #             parse_header(full_path, dst_file_path)
 
