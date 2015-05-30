@@ -166,10 +166,11 @@ def reformat_comment(inputStr, target):
             lines.insert(end+offset, element["content"][i])
             offset = offset+1
 
-    result = ""
+    result = "\n"
     for line in lines:
-        result = "\n{}{}".format(result, line)
+        result = "{}{}\n".format(result, line)
 
+    result = result.rstrip("\n") + "\n"
     return result
 
 def parse_header(src_file, dst_file):
