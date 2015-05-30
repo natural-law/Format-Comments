@@ -111,10 +111,9 @@ def reformat_comment(inputStr, target):
         # Replace with translated language
         for idx, line in enumerate(element["content"]):
             if idx == 0:
-                element["content"][idx] = "{} * @~{} ".format(" "*indent, target)
-            #     element["content"][idx] = "{} * @~{} {}".format(" "*indent, target, translated[index])
-            # else:
-            #     element["content"][idx] = "{} * {}".format(" "*indent, translated[index])
+                element["content"][idx] = "{} * @~{} {}".format(" "*indent, target, translated[index])
+            else:
+                element["content"][idx] = "{} * {}".format(" "*indent, translated[index])
             index = index+1
 
         # Add translated language
