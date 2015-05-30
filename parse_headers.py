@@ -7,20 +7,23 @@ import string
 
 from argparse import ArgumentParser
 
-stripRE = re.compile("(?P<begin>(^\s*\/\*\*\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>.*)(?P<end>\s*\*\/\s*)?")
+stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>[^(*/)]*)(?P<end>\*\/\s*$)?")
 elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s+(?P<content>[^@]*))")
 indentRE = re.compile("(?P<indent>^\s*)")
-
-tagFilter = ["lua", "js", "name", "static", "see", "since"]
+tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\}))")
 
 # Translate
 def translate(elements):
     for idx, element in enumerate(elements):
-        elements[idx] = "===="+elements[idx]
+        if elements[idx] != "":
+            elements[idx] = "===="+elements[idx]
     return elements
 
 def reformat_comment(inputStr, target):
     lines = inputStr.split("\n")
+    oneLine = False
+    if string.join(lines).strip() == lines[0].strip():
+        oneLine = True
     targetRE = re.compile("@~"+string.lower(target))
     result = inputStr
     elements = []
@@ -40,6 +43,12 @@ def reformat_comment(inputStr, target):
         stripped = re.match(stripRE, line)
         if stripped != None:
             content = stripped.group("content")
+            # Filte tag
+            if re.match(tagFilterRE, content) != None:
+                currentElement["end"] = index;
+                elements.append(currentElement)
+                currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
+                continue
 
             lineElements = re.findall(elementRE, line)
             for element in lineElements:
@@ -49,10 +58,6 @@ def reformat_comment(inputStr, target):
                     langTag = True
                     if element[1] != "~english":
                         continue
-
-                # Filte tag
-                if tagFilter.count(element[1]) != 0:
-                    continue
 
                 currentElement["end"] = index;
                 elements.append(currentElement)
@@ -81,11 +86,24 @@ def reformat_comment(inputStr, target):
         if len(content) == 0:
             continue
 
+        if string.join(content).strip() == "":
+            index = index+len(content)
+            continue
+
         # Generate lines
         # Append
         begin = element["begin"]
-        if element["language"] != True:
+        if element["language"] != True and content[0].strip() != "":
             lines[begin] = string.replace(lines[begin], content[0], "@~english "+content[0])
+
+        if oneLine:
+            strip = re.match(stripRE, lines[begin])
+            lines[begin] = "{}{} @~{}{}{}".format(strip.group("begin"), 
+                                                  strip.group("content"), 
+                                                  target,
+                                                  translated[index],
+                                                  strip.group("end"))
+            break
 
         # Replace with translated language
         for idx, line in enumerate(element["content"]):
@@ -120,7 +138,7 @@ def parse_header(src_file, dst_file):
     for line in lines:
         line_str = line.strip()
         idx = i + 1
-        if line_str.startswith('/**'):
+        if line_str.startswith('/*'):
             star_num = line_str.count('*')
             if star_num < 10:
                 if seg_start:
@@ -133,7 +151,7 @@ def parse_header(src_file, dst_file):
             if line_str.endswith('*/'):
                 seg_start = False
                 if len(seg_lines) > 0:
-                    replace_str = reformat_comment(''.join(seg_lines))
+                    replace_str = reformat_comment(''.join(seg_lines), "chinese")
                     new_lines.append(replace_str)
                     seg_lines = []
         else:
@@ -190,3 +208,4 @@ if __name__ == '__main__':
                 rel_path = os.path.relpath(full_path, source_path)
                 dst_file_path = os.path.join(dst_path, rel_path)
                 parse_header(full_path, dst_file_path)
+
