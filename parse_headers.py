@@ -168,7 +168,7 @@ def reformat_comment(inputStr, target):
 
     result = ""
     for line in lines:
-        result = "{}{}\n".format(result, line)
+        result = "\n{}{}".format(result, line)
 
     return result
 
