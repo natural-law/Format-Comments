@@ -11,8 +11,8 @@ import urllib
 import urllib2
 import json
 
-KEYFROM = 'zilongshanren'
-API_KEY = '1978571890'
+KEYFROM = ''
+API_KEY = ''
 
 from argparse import ArgumentParser
 

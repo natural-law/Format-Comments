@@ -1,4 +1,4 @@
-#使用说明
+# 使用说明
 
 ##申请有道的API key
 申请地址： http://fanyi.youdao.com/openapi
@@ -11,8 +11,8 @@ API_KEY和KEYFROM字段。
 下面是我的脚本里面的值
 
 ```
-KEYFROM = 'zilongshanren'
-API_KEY = '1978571890'
+KEYFROM = 'zilo***nren'
+API_KEY = '19*****90'
 ```
 
 现在里面的字段是我申请的，大家尽量用自己的。因为有道API的使用是有次数限制的，每小时不得超过1000次。
@@ -29,10 +29,19 @@ python ./parse_headers.py  -s 需要翻译的文件名 [-d 目标输出文件名
 python ./parse_headers.py -s ./src/UIButton.h -d ./dest/UIButton.h
 ```
 
-上面的代码没有传入目标文件，则会覆盖源文件。
+如果没有传入目标文件，则会覆盖源文件：
 
-##注意
-- 已经翻译一半的头文件不要使用这种方法。
+```
+python ./parse_headers.py -s ./cocos/2d/CCAction.h
+```
+
+CCAction.h会被自动翻译并覆盖到源文件中
+
+## 注意
+
+- **该工具只用来提升大家的工作效率，并不是代理大家的工作，自动翻译完成后一定要自审一遍所有翻译，因为有道的翻译很多是不可读或错误的**
+
+- 已经翻译一半的头文件也可以使用，但是已经包含@~chinese的注释段不会被处理
 
 - 本工具只在Mac下面测试过，如果Windows和Linux用户用不了，请提issue
 
