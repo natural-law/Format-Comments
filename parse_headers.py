@@ -39,7 +39,7 @@ def getTranslate(txt):
     req = urllib2.Request(url)
     response = urllib2.urlopen(req)
     result = json.loads(response.read())
-    # print(result)
+    print(result)
     if result.get('translation'):
         translatedText = result['translation']
         return translatedText[0]
