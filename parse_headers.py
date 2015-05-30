@@ -16,7 +16,7 @@ API_KEY = ''
 
 from argparse import ArgumentParser
 
-stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>[^(*/)]*)(?P<end>\*\/\s*$)?")
+stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>[^(*/)]*)(?P<end>\*+\/\s*$)?")
 elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s+(?P<content>[^@]*))")
 paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))")
 indentRE = re.compile("(?P<indent>^\s*)")
@@ -145,7 +145,7 @@ def reformat_comment(inputStr, target):
 
         if oneLine:
             strip = re.match(stripRE, lines[begin])
-            lines[begin] = "{}{} @~{}{}{}".format(strip.group("begin"), 
+            lines[begin] = "{}{} @~{} {}{}".format(strip.group("begin"), 
                                                   strip.group("content"), 
                                                   target,
                                                   translated[index],
