@@ -38,5 +38,5 @@ python ./parse_headers.py -s ./src/UIButton.h -d ./dest/UIButton.h
 
 - 大家翻译的工作流，推荐先用这个工具刷出一个头文件的机器自动翻译，然后手动调整校对好，再发PR给我review.
 
-- 一个PR一个头翻译，否则我不好Review.
+- 一个PR只包含一个头文件翻译，否则我不好Review.
 
