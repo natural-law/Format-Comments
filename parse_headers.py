@@ -20,7 +20,7 @@ stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<conte
 elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s+(?P<content>[^@]*))")
 paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))")
 indentRE = re.compile("(?P<indent>^\s*)")
-tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\}))")
+tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\})|(@class)|(@code)|(@deprecated))")
 
 
 def getTranslate(txt):
