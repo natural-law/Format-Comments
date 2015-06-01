@@ -170,7 +170,7 @@ def reformat_comment(inputStr, target):
     for line in lines:
         result = "{}{}\n".format(result, line)
 
-    result = result.rstrip("\n") + "\n"
+    result = result.strip("\n") + "\n"
     return result
 
 def parse_header(src_file, dst_file):
