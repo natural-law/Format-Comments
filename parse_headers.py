@@ -16,7 +16,8 @@ API_KEY = ''
 
 from argparse import ArgumentParser
 
-stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>[^*/]*)(?P<end>\*+\/\s*$)?")
+stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>.*)")
+endRE = re.compile("\*+\/\s*$")
 elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s?(?P<content>[^@]*)?)")
 paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))")
 indentRE = re.compile("(?P<indent>^\s*)")
@@ -58,12 +59,16 @@ def translate(elements):
 def find_all_element(lines):
     elements = []
     currentElement = {"language": False, "begin": 0, "end": 0, "content": [], "skip": False}
+    end = None
 
     skip = False
     for index, line in enumerate(lines):
         foundSub = False
         langTag = False
 
+        end = re.search(endRE, line)
+        if end != None:
+            line = line[:end.start()]
         stripped = re.match(stripRE, line)
         if stripped != None:
             content = stripped.group("content")
@@ -163,12 +168,19 @@ def reformat_comment(inputStr, target):
                 lines[begin+offset] = string.replace(lines[begin+offset], content[0], "@~english "+content[0])
 
         if oneLine:
-            strip = re.match(stripRE, lines[begin])
-            lines[begin] = "{}{} @~{} {}{}".format(strip.group("begin"), 
+            end = re.search(endRE, lines[begin])
+            strip = None;
+            if end != None:
+                strip = re.match(stripRE, lines[begin][:end.start()])
+                end = end.group()
+            else:
+                end = ""
+            if strip != None:
+                lines[begin] = "{}{} @~{} {}{}".format(strip.group("begin"), 
                                                   strip.group("content"), 
                                                   target,
                                                   translated[index],
-                                                  strip.group("end"))
+                                                  end)
             break
 
         # Replace with translated language
