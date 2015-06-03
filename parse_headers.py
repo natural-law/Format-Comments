@@ -17,11 +17,13 @@ API_KEY = ''
 from argparse import ArgumentParser
 
 stripRE = re.compile("(?P<begin>(^\s*\/\*\*?\s*)|(^\s*\*\/?\s*)|(^\s*))(?P<content>[^*/]*)(?P<end>\*+\/\s*$)?")
-elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s+(?P<content>[^@]*))")
+elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s?(?P<content>[^@]*)?)")
 paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))")
 indentRE = re.compile("(?P<indent>^\s*)")
-tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\})|(@class)|(@code)|(@deprecated))")
+tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\})|(@class)|(@code)|(@deprecated)|(@ingroup))")
 
+tagToSkip = ["lua", "js", "name", "static", "see", "since", "addtogroup", "{", "}", "class", "code", "endcode", "deprecated", "ingroup", 
+                    "~chinese", "~japanese", "~korean", "~french", "~german", "~italian"]
 
 def getTranslate(txt):
     unicode(txt, 'utf-8')
@@ -53,23 +55,11 @@ def translate(elements):
             elements[idx] = getTranslate(elements[idx])
     return elements
 
-def reformat_comment(inputStr, target):
-    lines = inputStr.split("\n")
-    oneLine = False
-    if string.join(lines).strip() == lines[0].strip():
-        oneLine = True
-    targetRE = re.compile("@~"+string.lower(target))
-    result = inputStr
+def find_all_element(lines):
     elements = []
-    currentElement = {"language": False, "begin": 0, "end": 0, "content": []}
-    index = 0
+    currentElement = {"language": False, "begin": 0, "end": 0, "content": [], "skip": False}
 
-    # Check target, exist then continue
-    if re.search(targetRE, inputStr) != None:
-        return inputStr
-
-    indent = len(re.match(indentRE, lines[0]).group("indent"))
-
+    skip = False
     for index, line in enumerate(lines):
         foundSub = False
         langTag = False
@@ -77,12 +67,6 @@ def reformat_comment(inputStr, target):
         stripped = re.match(stripRE, line)
         if stripped != None:
             content = stripped.group("content")
-            # Filte tag
-            if re.match(tagFilterRE, content) != None:
-                currentElement["end"] = index;
-                elements.append(currentElement)
-                currentElement = {"language": langTag, "begin": index, "end": 0, "content": [""]}
-                continue
 
             # Parameter
             element = re.match(paramRE, content)
@@ -90,35 +74,70 @@ def reformat_comment(inputStr, target):
                 foundSub = True
                 currentElement["end"] = index;
                 elements.append(currentElement)
-                currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
+                currentElement = {"language": langTag, "begin": index, "end": 0, "content": [], "skip": skip}
                 currentElement["content"].append(element.group("content"))
                 langTag = False
+                skip = False
             else:
-                lineElements = re.findall(elementRE, line)
-                for element in lineElements:
+                subline = line
+                element = re.search(elementRE, subline)
+                while element != None:
                     foundSub = True
                     # Language tag and not english
-                    if element[1][0] == "~":
+                    elemName = element.group("name")
+                    if elemName != None and elemName[0] == "~":
                         langTag = True
-                        if element[1] != "~english":
-                            continue
+                    if elemName in tagToSkip:
+                        skip = True
 
-                    currentElement["end"] = index;
+                    currentElement["end"] = index
                     elements.append(currentElement)
-                    currentElement = {"language": langTag, "begin": index, "end": 0, "content": []}
-                    currentElement["content"].append(element[2])
+                    currentElement = {"language": langTag, "begin": index, "end": 0, "content": [], "skip": skip}
+                    elemContent = element.group("content")
+                    if elemContent != None:
+                        currentElement["content"].append(elemContent)
+                    else:
+                        currentElement["content"].append("")
                     langTag = False
+                    skip = False
+
+                    subline = subline[element.end():]
+                    if subline:
+                        element = re.match(elementRE, subline)
+                    else:
+                        element = None
 
             if not foundSub:
                 currentElement["content"].append(content)
 
     currentElement["end"] = index-1
     elements.append(currentElement)
+    return elements
+
+def reformat_comment(inputStr, target):
+    lines = inputStr.split("\n")
+    oneLine = False
+    if string.join(lines).strip() == lines[0].strip():
+        oneLine = True
+    targetRE = re.compile("@~"+string.lower(target))
+    result = inputStr
+
+    # Check target, exist then continue
+    if re.search(targetRE, inputStr) != None:
+        return inputStr
+
+    indent = len(re.match(indentRE, lines[0]).group("indent"))
+
+    elements = find_all_element(lines)
 
     tobeTranslate = []
     for element in elements:
+        skip = element["skip"]
         for line in element["content"]:
-            tobeTranslate.append(line)
+            if skip:
+                tobeTranslate.append("")
+            else:
+                tobeTranslate.append(line)
 
     translated = translate(tobeTranslate)
 
@@ -130,7 +149,7 @@ def reformat_comment(inputStr, target):
         if len(content) == 0:
             continue
 
-        if string.join(content).strip() == "":
+        if element["skip"] or string.join(content).strip() == "":
             index = index+len(content)
             continue
 
