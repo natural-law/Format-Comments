@@ -23,7 +23,7 @@ paramRE = re.compile("(?P<element>@param\s+(?P<pname>\w+)\s+(?P<content>[^@]*))"
 indentRE = re.compile("(?P<indent>^\s*)")
 tagFilterRE = re.compile("((@lua)|(@js)|(@name)|(@static)|(@see)|(@since)|(@addtogroup)|(@\{)|(@\})|(@class)|(@code)|(@deprecated)|(@ingroup))")
 
-tagToSkip = ["lua", "js", "name", "static", "see", "since", "addtogroup", "{", "}", "class", "code", "endcode", "deprecated", "ingroup", 
+tagToSkip = ["lua", "js", "name", "static", "see", "since", "addtogroup", "{", "}", "class", "code", "endcode", "deprecated", "ingroup", "def",
                     "~chinese", "~japanese", "~korean", "~french", "~german", "~italian"]
 
 def getTranslate(txt):
