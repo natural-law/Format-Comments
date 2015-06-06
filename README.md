@@ -47,3 +47,15 @@ CCAction.h会被自动翻译并覆盖到源文件中
 
 - 一个PR只包含一个头文件翻译，否则不好Review.
 
+- 如果发现下面的错误，请升级python到2.7.6以上版本
+
+    ```
+    Traceback (most recent call last):
+      File "parse_headers.py", line 21, in <module>
+        elementRE = re.compile("(?P<element>@(?P<name>[\w~]+)\s?(?P<content>[^@]*)?)")
+      File "/usr/local/Cellar/python/2.7.5/Frameworks/Python.framework/Versions/2.7/lib/python2.7/re.py", line 196, in compile
+        return _compile(pattern, flags)
+      File "/usr/local/Cellar/python/2.7.5/Frameworks/Python.framework/Versions/2.7/lib/python2.7/re.py", line 248, in _compile
+        raise error, v # invalid expression
+    sre_constants.error: nothing to repeat
+    ```
